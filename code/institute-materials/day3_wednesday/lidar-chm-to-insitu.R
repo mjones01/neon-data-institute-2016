@@ -97,17 +97,17 @@ head(insitu_maxStemHeight)
 ## ----merge-dataframe-----------------------------------------------------
 
 # merge to create a new spatial df
-SJER_height@data <- data.frame(SJER_height@data,
-                               insitu_maxStemHeight[match(SJER_height@data[,"Plot_ID"], insitu_maxStemHeight$plotid),])
+#SJER_height@data <- data.frame(SJER_height@data,
+#                               insitu_maxStemHeight[match(SJER_height@data[,"Plot_ID"], #insitu_maxStemHeight$plotid),])
 
 # the code below is another way to use MERGE however it creates a normal data.frame
 # rather than a spatial object. Above, we reassigned the "data" slot to
 # a newly merged data frame
 # merge the insitu data into the centroids data.frame
-# SJER_height <- merge(SJER_height,
-#                     insitu_maxStemHeight,
-#                   by.x = 'Plot_ID',
-#                   by.y = 'plotid')
+SJER_height <- merge(SJER_height,
+                     insitu_maxStemHeight,
+                   by.x = 'Plot_ID',
+                   by.y = 'plotid')
 
 SJER_height@data
 
@@ -139,6 +139,21 @@ p + theme(panel.background = element_rect(colour = "grey")) +
   theme(plot.title=element_text(family="sans", face="bold", size=20, vjust=1.9)) +
   theme(axis.title.y = element_text(family="sans", face="bold", size=14, angle=90, hjust=0.54, vjust=1)) +
   theme(axis.title.x = element_text(family="sans", face="bold", size=14, angle=00, hjust=0.54, vjust=-.2))
+
+
+## ----view-diff-----------------------------------------------------------
+
+SJER_height@data$ht_diff <-  (SJER_height@data$SJER_lidarCHM - SJER_height@data$insituMaxHt)
+
+boxplot(SJER_height@data$ht_diff)
+barplot(SJER_height@data$ht_diff,
+        xlab = SJER_height@data$Plot_ID)
+
+
+# create bar plot
+library(ggplot2)
+ggplot(data=SJER_height@data, aes(x=Plot_ID, y=ht_diff, fill=Plot_ID)) +
+    geom_bar(stat="identity")
 
 
 ## ----create-plotly, eval=FALSE-------------------------------------------

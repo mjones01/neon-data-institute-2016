@@ -174,7 +174,9 @@ aspect <- crop(aspect, extent(chm))
 # first create a matrix of values that represent the classification ranges
 # North face = 1
 # South face = 2
-class.m <- c(0, 45, 1, 
+# classify classes start to the RIGHT of the beginning value. So we start at -99
+# to capture zeros
+class.m <- c(-.99, 45, 1, 
              45, 135, NA, 
              135, 225, 2,  
              225 , 315, NA, 
@@ -202,8 +204,11 @@ plot(asp.ns,
      axes=F,
      main="North and South Facing Slopes \nNEON Lower Teakettle Field Site",
      bty="n",
-     legend=F)
+     legend=F,
+     box=F)
 
+# force a border
+plot(extent(asp.ns), add=T) 
 # allow legend to plot outside of bounds
 par(xpd=TRUE)
 
@@ -243,10 +248,18 @@ hist(all.data[[4]],
      col="springgreen")
 
 
+
 # get mean, min max stats for all layers
-all.data.stats <- data.frame(t(summary(all.data, na.rm=T)))
-all.data.stats$mean <- ht.mean <- cellStats(all.data, mean, na.rm=T)
-all.data.stats$sd <- ht.mean <- cellStats(all.data, sd, na.rm=T)
+all.data.stats <- data.frame(t(summary(all.data, 
+                                       na.rm=T)))
+
+all.data.stats$mean <- ht.mean <- cellStats(all.data, 
+                                            mean, 
+                                            na.rm=T)
+
+all.data.stats$sd <- ht.mean <- cellStats(all.data, 
+                                          sd, 
+                                          na.rm=T)
 
 row.names(all.data.stats) <- all.names
 
@@ -258,7 +271,7 @@ all.data.stats
 thresholds <- data.frame(id=1)
 
 # let's be semi-robust and call 'tall' trees those with mean + 1 sd
-thresholds$height <- all.data.stats["CHM","mean"] + all.data.stats["CHM","sd"]
+thresholds$height <- all.data.stats["CHM","mean"] + all.data.stats["CHM", "sd"]
 thresholds$height
 
 

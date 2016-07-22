@@ -14,10 +14,11 @@ dirs <- c("institute-materials/day1_monday",
           "institute-materials/day5_friday",
           "institute-materials/day6_saturday",
           "pre-institute-materials/pre-institute3-rmd")
+
 #################### Set up Input Variables #############################
 
 # set directory that  you'd like to build
-dir <- dirs[1]
+dir <- dirs[4]
 
 # Inputs - Where the git repo is on your computer
 gitRepoPath <-"~/Documents/GitHub/neon-data-institute-2016"

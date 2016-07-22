@@ -3,10 +3,10 @@ layout: post
 title: "LiDAR and Hyperspectral Data Product Fusion"
 date:   2016-06-20
 dateCreated:  2016-05-01
-lastModified: 2016-06-16
+lastModified: 2016-06-23
 authors: [Kyla Dahlin]
-instructors: [Kyla, Leah]
-time: "1:00"
+instructors: [Kyla]
+time: "10:00"
 contributors: [Leah A. Wasser, Megan A. Jones]
 packagesLibraries: [rhdf5, raster, rgdal, rgeos, sp]
 categories: [self-paced-tutorial]
@@ -104,7 +104,7 @@ Let's have a close look at the vegetation height values. Do they seem reasonable
 
     cellStats(chm, mean)
 
-    ## [1] 0.03366514
+    ## [1] 5.62654
 
 ## Create LiDAR Raster Brick
 
@@ -345,7 +345,9 @@ Now we can create the mask.
     # first create a matrix of values that represent the classification ranges
     # North face = 1
     # South face = 2
-    class.m <- c(0, 45, 1, 
+    # classify classes start to the RIGHT of the beginning value. So we start at -99
+    # to capture zeros
+    class.m <- c(-.99, 45, 1, 
                  45, 135, NA, 
                  135, 225, 2,  
                  225 , 315, NA, 
@@ -356,12 +358,12 @@ Now we can create the mask.
                     byrow=TRUE)
     rcl.m
 
-    ##      [,1] [,2] [,3]
-    ## [1,]    0   45    1
-    ## [2,]   45  135   NA
-    ## [3,]  135  225    2
-    ## [4,]  225  315   NA
-    ## [5,]  315  360    1
+    ##        [,1] [,2] [,3]
+    ## [1,]  -0.99   45    1
+    ## [2,]  45.00  135   NA
+    ## [3,] 135.00  225    2
+    ## [4,] 225.00  315   NA
+    ## [5,] 315.00  360    1
 
     # classify the aspect product using the classification matrix
     asp.ns <- reclassify(aspect, rcl.m)
@@ -381,8 +383,11 @@ Now we can create the mask.
          axes=F,
          main="North and South Facing Slopes \nNEON Lower Teakettle Field Site",
          bty="n",
-         legend=F)
+         legend=F,
+         box=F)
     
+    # force a border
+    plot(extent(asp.ns), add=T) 
     # allow legend to plot outside of bounds
     par(xpd=TRUE)
     
@@ -438,9 +443,16 @@ the most sense.
 ![ ]({{ site.baseurl }}/images/rfigs/institute-materials/day4_thursday/data-fusion/id-veg-metrics-1.png)
 
     # get mean, min max stats for all layers
-    all.data.stats <- data.frame(t(summary(all.data, na.rm=T)))
-    all.data.stats$mean <- ht.mean <- cellStats(all.data, mean, na.rm=T)
-    all.data.stats$sd <- ht.mean <- cellStats(all.data, sd, na.rm=T)
+    all.data.stats <- data.frame(t(summary(all.data, 
+                                           na.rm=T)))
+    
+    all.data.stats$mean <- ht.mean <- cellStats(all.data, 
+                                                mean, 
+                                                na.rm=T)
+    
+    all.data.stats$sd <- ht.mean <- cellStats(all.data, 
+                                              sd, 
+                                              na.rm=T)
     
     row.names(all.data.stats) <- all.names
     
@@ -451,12 +463,12 @@ the most sense.
     ## NDVI   -0.1495505    0.1341227    0.4074749    0.6767036    0.9049774    0
     ## DSM  2172.8298340 2283.6398926 2310.2099609 2328.3000488 2391.8298340    0
     ## DTM  2172.8298340 2277.0100098 2306.5600586 2322.7900391 2385.2299805    0
-    ## CHM     0.0000000    0.0000000    0.0000000    0.0000000   55.6800003    0
+    ## CHM     0.0000000    0.0000000    0.0000000    8.2100000   55.6800003  855
     ##              mean         sd
-    ## NDVI 4.126061e-01  0.2745163
-    ## DSM  2.305675e+03 37.6960106
-    ## DTM  2.301177e+03 39.1300683
-    ## CHM  3.366514e-02  1.3159769
+    ## NDVI    0.4126061  0.2745163
+    ## DSM  2305.6755206 37.6958661
+    ## DTM  2301.1770607 39.1300683
+    ## CHM     5.6265399 10.0842808
 
 ## Calculate Tall Trees Threshold
 
@@ -470,10 +482,10 @@ Uncertainty discussion: selecting thresholds.
     thresholds <- data.frame(id=1)
     
     # let's be semi-robust and call 'tall' trees those with mean + 1 sd
-    thresholds$height <- all.data.stats["CHM","mean"] + all.data.stats["CHM","sd"]
+    thresholds$height <- all.data.stats["CHM","mean"] + all.data.stats["CHM", "sd"]
     thresholds$height
 
-    ## [1] 1.349642
+    ## [1] 15.71082
 
 Next, look at NDVI.
 
@@ -649,13 +661,13 @@ Are NDVI and tree height related? Why might this be?
     ## 	Welch Two Sample t-test
     ## 
     ## data:  north.veght.df$veght and south.veght.df$veght
-    ## t = 5.8322, df = 33766, p-value = 2.759e-09
+    ## t = 75.357, df = 41602, p-value < 2.2e-16
     ## alternative hypothesis: true difference in means is greater than 0
     ## 95 percent confidence interval:
-    ##  0.03748161        Inf
+    ##  4.316169      Inf
     ## sample estimates:
-    ##  mean of x  mean of y 
-    ## 0.05220541 0.00000000
+    ## mean of x mean of y 
+    ##  6.069046  1.656562
 
 Notice, once again we are repeating code. This would make for a nice function! 
 If it's a set of functions, we could have changed the methods in **one place** from
